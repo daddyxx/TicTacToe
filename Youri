@@ -1,0 +1,396 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Xml.Linq;
+
+namespace TicTacToe_v1
+{
+    public partial class Form1 : Form
+    {
+        bool turn = true; //bepaalt wie er aan zet is
+        int turnCount = 0; //houdt de zetten bij
+        bool against_computer = false; //wanneer computer niet in de naam zit, 2 players
+        int[] scorebord = new int[3];
+
+
+
+
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Gemaakt door Youri de beste IT'er");               //info van de maker, toolstrip
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();                                                 //uitschakelen van de applicatie, toolstrip
+        }
+
+        private void button_click(object sender, EventArgs e)
+        {
+            if ((p1.Text == "Player 1") || (p2.Text == "Player 2"))
+            {
+                MessageBox.Show("vul de spelersnamen in");
+            }
+            else
+            {
+                //1. Wanneer button wordt aangeklikt, show X of O
+                Button b = (Button)sender;  //converteert sender object als button (b)
+                if (turn)
+                    b.Text = "X";           //wanneer het X beurt is, schrijf X
+                else
+                    b.Text = "O";           //wanneer het O beurt is, schrijf O
+
+
+                //2. Wanneer button wordt aangeklikt, wissel de beurt
+                turn = !turn;               //beurt wordt gewisseld (!=not turn) 
+
+                //3. Wanneer button wordt aangeklikt, disabel deze
+                b.Enabled = false;          //button wordt gedisabled wanneer aangevinkt
+                turnCount++;                //voor gelijkspel, na elke zet komt +1. bij 9 is het gelijkspel
+                checkForWinner();
+            }
+            if ((!turn) && (against_computer))
+            {
+                computer_make_move();          //schakelt naar void computer maakt move
+            }
+        }
+
+        private void computer_make_move()
+        {
+            //prio 1:   tick tac toe
+            //prio 2:  block x tic tac toe
+            //prio 3:  hoeken
+            //prio 4:  open veld
+
+            Button move = null;
+
+            //prio 1 tictacto
+            move = look_for_win_or_block("O"); //kijk voor win
+            if (move == null)
+            {
+                move = look_for_win_or_block("X"); //kijk voor block
+                if (move == null)
+                {
+                    move = look_for_corner();
+                    if (move == null)
+                    {
+                        move = look_for_open_space();
+                    }
+                }
+            }
+
+            move.PerformClick();
+        }
+
+        private Button look_for_open_space()
+        {
+            Console.WriteLine("Looking for open space");  //pak willekeurige open ruimte
+            Button b = null;
+            foreach (Control c in Controls)
+            {
+                b = c as Button;
+                if (b != null)
+                {
+                    if (b.Text == "")
+                        return b;
+                }
+            }
+
+            return null;
+        }
+
+        private Button look_for_corner()
+        {
+            Console.WriteLine("Looking for corner");    //pak een hoek
+            if (Left1.Text == "O")                      //speler zet links boven
+            {  
+                if (Right1.Text == "")
+                    return Right1;
+                if (Right3.Text == "")
+                    return Right3;
+                if (Right1.Text == "")
+                    return Right1;
+            }
+
+            if (Right1.Text == "O")                     ////speler zet rechts boven
+            {
+                if (Left1.Text == "")
+                    return Left1;
+                if (Right3.Text == "")
+                    return Right3;
+                if (Left3.Text == "")
+                    return Left3;
+            }
+
+            if (Right3.Text == "O")         ////speler zet rechts onder
+            {
+                if (Left1.Text == "")
+                    return Right1;
+                if (Right3.Text == "")
+                    return Right3;
+                if (Left3.Text == "")
+                    return Left3;
+            }
+
+            if (Left1.Text == "O")
+            {
+                if (Left1.Text == "")
+                    return Right3;
+                if (Right3.Text == "")
+                    return Right3;
+                if (Right3.Text == "")
+                    return Right3;
+            }
+
+            if (Left1.Text == "")
+                return Left1;
+            if (Right3.Text == "")
+                return Right3;
+            if (Left3.Text == "")
+                return Left3;
+            if (Right3.Text == "")
+                return Right3;
+
+            return null;
+        }
+
+        private Button look_for_win_or_block(string mark) 
+        {
+            Console.WriteLine("Looking for win or block:  " + mark);
+            //HORIZONTAL TESTS
+            if ((Left1.Text == mark) && (Middle1.Text == mark) && (Right1.Text == ""))
+                return Right1;
+            if ((Middle1.Text == mark) && (Right1.Text == mark) && (Left1.Text == ""))
+                return Left1;
+            if ((Left1.Text == mark) && (Right1.Text == mark) && (Middle1.Text == ""))
+                return Middle1;
+
+            if ((Left2.Text == mark) && (Middle2.Text == mark) && (Right2.Text == ""))
+                return Right2;
+            if ((Middle2.Text == mark) && (Right2.Text == mark) && (Left2.Text == ""))
+                return Left2;
+            if ((Left2.Text == mark) && (Right2.Text == mark) && (Middle2.Text == ""))
+                return Middle2;
+
+            if ((Left3.Text == mark) && (Middle3.Text == mark) && (Right3.Text == ""))
+                return Right3;
+            if ((Middle3.Text == mark) && (Right3.Text == mark) && (Left3.Text == ""))
+                return Left3;
+            if ((Left3.Text == mark) && (Right3.Text == mark) && (Middle2.Text == ""))
+                return Middle3;
+
+            //VERTICAL TESTS
+            if ((Left1.Text == mark) && (Middle1.Text == mark) && (Right1.Text == ""))
+                return Right1;
+            if ((Middle1.Text == mark) && (Right1.Text == mark) && (Left1.Text == ""))
+                return Left1;
+            if ((Left1.Text == mark) && (Right1.Text == mark) && (Middle1.Text == ""))
+                return Middle1;
+
+            if ((Left2.Text == mark) && (Middle2.Text == mark) && (Right2.Text == ""))
+                return Right2;
+            if ((Middle2.Text == mark) && (Right2.Text == mark) && (Left2.Text == ""))
+                return Left2;
+            if ((Left2.Text == mark) && (Right2.Text == mark) && (Middle2.Text == ""))
+                return Middle2;
+
+            if ((Left3.Text == mark) && (Middle3.Text == mark) && (Right3.Text == ""))
+                return Right3;
+            if ((Middle3.Text == mark) && (Right3.Text == mark) && (Left3.Text == ""))
+                return Left3;
+            if ((Left3.Text == mark) && (Right3.Text == mark) && (Middle3.Text == ""))
+                return Middle3;
+
+            //DIAGONAL TESTS
+            if ((Left1.Text == mark) && (Middle2.Text == mark) && (Right3.Text == ""))
+                return Right3;
+            if ((Middle2.Text == mark) && (Right3.Text == mark) && (Left1.Text == ""))
+                return Left1;
+            if ((Left1.Text == mark) && (Right3.Text == mark) && (Middle2.Text == ""))
+                return Middle2;
+
+            if ((Left3.Text == mark) && (Middle2.Text == mark) && (Right1.Text == ""))
+                return Right1;
+            if ((Middle2.Text == mark) && (Right1.Text == mark) && (Left3.Text == ""))
+                return Left3;
+            if ((Left3.Text == mark) && (Right1.Text == mark) && (Middle2.Text == ""))
+                return Middle2;
+
+
+            return null;
+        }
+
+        private void checkForWinner() 
+        {
+            //4. Check of er een winnaar is
+            bool we_hebben_een_winnaar = false;
+            //horizontaal 
+            if ((Left1.Text == Middle1.Text) && (Middle1.Text == Right1.Text) && (!Left1.Enabled))  //wanneer Left1 Middle1 en Right 1 zijn enabled, dan is er een winnaar 
+                we_hebben_een_winnaar = true;
+            else if ((Left2.Text == Middle2.Text) && (Middle2.Text == Right2.Text) && (!Left2.Enabled))  //wanneer Left2 Middle2 en Right 2 zijn enabled, dan is er een winnaar 
+                we_hebben_een_winnaar = true;
+            else if ((Left3.Text == Middle3.Text) && (Middle3.Text == Right3.Text) && (!Left3.Enabled))  //wanneer Left3 Middle2 en Right 3 zijn enabled, dan is er een winnaar 
+                we_hebben_een_winnaar = true;
+
+            //diagonaal 
+            if ((Left1.Text == Middle2.Text) && (Middle2.Text == Right3.Text) && (!Left1.Enabled))  //wanneer Left1 en Middle2  en Right3 zijn enabled, dan is er een winnaar 
+                we_hebben_een_winnaar = true;
+            else if ((Right1.Text == Middle2.Text) && (Middle2.Text == Left3.Text) && (!Right1.Enabled))  //wanneer Right1 Middle2 en Left3 zijn enabled, dan is er een winnaar 
+                we_hebben_een_winnaar = true;
+
+            //verticaal 
+            if ((Left1.Text == Left2.Text) && (Left2.Text == Left3.Text) && (!Left1.Enabled))  //wanneer Left1 Left2 en Left3 zijn enabled, dan is er een winnaar 
+                we_hebben_een_winnaar = true;
+            else if ((Middle1.Text == Middle2.Text) && (Middle2.Text == Middle3.Text) && (!Middle1.Enabled))  //wanneer Middle1 Middle2 en Middle3 zijn enabled, dan is er een winnaar 
+                we_hebben_een_winnaar = true;
+            else if ((Right1.Text == Right2.Text) && (Right2.Text == Right3.Text) && (!Right3.Enabled))  //wanneer Right1 Right2 en Right 3 zijn enabled, dan is er een winnaar 
+                we_hebben_een_winnaar = true;
+            if (we_hebben_een_winnaar)
+
+            {
+                disableButtons();
+                String winnaar = "";
+                if (turn)
+                {
+                    winnaar = p2.Text;      //Wanneer aan een van deze statements wordt gedaan door O, wint O
+                    o_win_count.Text = (Int32.Parse(o_win_count.Text) + 1).ToString();
+                }
+                else
+                {
+                    winnaar = p1.Text;      //Wanneer aan een van deze statements wordt gedaan door X, wint X
+                    x_win_count.Text = (Int32.Parse(x_win_count.Text) + 1).ToString();
+                }
+
+                MessageBox.Show(winnaar + " Wint!", "We hebben een winnaar");   //Laat de winnaar weergeven in een messagebox
+                newGameToolStripMenuItem.PerformClick();
+
+            }
+            else
+            {
+                if (turnCount == 9)               //wanneer 9 zetten zijn gedaan, wint niemand
+                    {                              //MessageBox.Show("Gelijkspel", "Helaas, gelijkspel");    //laat zien dat het gelijkspel is
+                    draw_count.Text = (Int32.Parse(draw_count.Text) + 1).ToString();
+                    MessageBox.Show("gelijkspel", "Helaas, gelijkspel");
+                    newGameToolStripMenuItem.PerformClick();
+                    }
+                }
+        }
+
+        private void disableButtons()
+        {
+            try   //voorkomt het casten van mijn mooie menu strip. negeert de uitzondering hiervan. 
+            {
+                foreach (Control c in Controls) //voor elke button in het form wordt disabled
+                {
+                    Button b = (Button)c;       //convert control naar button
+                    b.Enabled = false;
+                }
+
+            }
+            catch { }
+
+        }
+
+        private void newGameToolStripMenuItem_Click(object sender, EventArgs e)     //Reset de spelers voortgang
+        {
+            turn = true;
+            turnCount = 0;
+
+
+                foreach (Control c in Controls) //voor elke button in het form wordt disabled
+            {
+                try   //voorkomt het casten van mijn mooie menu strip. negeert de uitzondering hiervan. 
+                { 
+                    Button b = (Button)c;       //convert control naar button
+                    b.Enabled = true;
+                    b.Text = "";
+                }
+                catch { }
+            }
+
+ 
+        }
+
+        private void helpToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("voor vragen, neem contact op met Youri");          //Toolstrip help (bij bugs)
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            setPlayerDefaultsToolStripMenuItem.PerformClick();
+        }
+
+        private void button_enter(object sender, EventArgs e)
+        {
+            Button b = (Button)sender;  //laat een letter zien in de weergave box
+            if (b.Enabled)
+            {
+                if (turn)
+                    b.Text = "X";           //laat de letter X zien
+                else
+                    b.Text = "O";           //laat de letter O zien
+            }
+        }
+
+        private void button_leave(object sender, EventArgs e)
+        {
+            Button b = (Button)sender;
+            if (b.Enabled)
+            {
+                b.Text = ""; 
+            }
+        }
+
+        private void resetWinCountToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            o_win_count.Text = "0";
+            x_win_count.Text = "0";
+            draw_count.Text = "0";
+        }
+
+        private void resetWinCountToolStripMenuItem_Click_1(object sender, EventArgs e)
+        {
+            o_win_count.Text = "0";
+            x_win_count.Text = "0";
+            draw_count.Text = "0";
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void p2_TextChanged(object sender, EventArgs e)
+        {
+            if (p2.Text.ToUpper() == "COMPUTER") 
+            against_computer = true;
+            else
+                against_computer = false;
+        }
+
+        private void setPlayerDefaultsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            p1.Text = "Youri";
+            p2.Text = "Computer";
+        }
+
+        public static List<int> score = new List<int>();
+        public static List<int> player = new List<int>();
+        
+
+    }
+}
+
+
